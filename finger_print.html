@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>
+        Muahaha je vais voler ta fingerprint
+    </title>
+    <script src="fp.js"></script>
+</head>
+<body>
+    <p>Pour faire fonctionner la récupération des données des fingerprints de Canva Defender et l'original</p>
+    <p>Il faut désactiver Canva Defenders, charger la page, puis reactiver Canva Defenders et recharger la page </p>
+    <p id="myfp"></p>
+    <p id="message"></p>
+    <canvas id="canvasFingerprint" width="200" height="200"></canvas>
+    <img id="canvasFingerprintImage" src="" />
+    <script>
+        // Déclaration de la variable globale pour stocker l'adresse IP de l'utilisateur
+let userIP = null;
+
+// Fonction pour récupérer l'adresse IP de l'utilisateur
+function getUserIP(onNewIP) {
+    // Appel à l'API externe pour récupérer l'adresse IP
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            // Appel de la fonction de callback avec l'adresse IP
+            onNewIP(data.ip);
+        })
+        .catch(err => console.log(err));
+}
+
+// Fonction de callback pour afficher l'adresse IP de l'utilisateur et la stocker dans la variable globale
+function displayIP(ip) {
+    userIP = ip;
+}
+
+// Appel de la fonction pour récupérer l'adresse IP de l'utilisateur
+getUserIP(displayIP);
+
+// Attendre que la variable userIP soit définie avant de l'utiliser
+
+	var one_time_canva = true;
+        var one_time = true;
+        var canva ;
+	var real_canva;
+        //modified code from paper
+        var o = new MutationObserver((ms) =>{
+            ms.forEach((m) => {
+                //var noise = "['0','0','0','0']";
+                var fingerprint = new Fingerprint({canvas: true});
+                const canvasFingerprint = fingerprint.getCanvasFingerprint(noise);
+                //document.getElementById('fingerprint').innerText = `Canvas Fingerprint: ${canvasFingerprint}`;
+                console.log(m.addedNodes[0]);
+                console.log(m.addedNodes[0].childNodes[0]);
+                if (m.addedNodes[0] && m.addedNodes[0].childNodes[0]) {
+                    var script= "overrideDefaultMethods";
+                    var data = m.addedNodes[0].childNodes[0].textContent;
+                    var noise = data.match(/(-?\d{1,2},\s*){4}/)[0].split(",");
+
+                    //https://github.com/artem0/canvas-fingerprinting
+                    
+                } 
+
+                // récupération des pixels du canvas fingerprint
+                var canvas = document.getElementById("canvasFingerprint");
+                var imageData = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
+                var pixels = imageData.data;
+                var imageUrl = canvas.toDataURL("image/png");
+                var image = document.getElementById("canvasFingerprintImage");
+                image.src = imageUrl;
+                //let out = {noise : noise, fp : withCanvasDrawing.get()[0], pixels : pixels};
+                setTimeout(() => {
+                    if (userIP !== null) {
+                        console.log("L'adresse IP de l'utilisateur est : " + userIP);
+                        // Vous pouvez utiliser la variable userIP ici
+			
+			if (one_time_canva){
+				real_canva=canvasFingerprint_recup;
+				one_time_canva = false;
+			}
+                        //console.log(real_canva)
+                        
+                        let out = {noise : noise,ip : userIP, fp :real_canva};
+
+                        console.log(out);
+                        // Code stolen from https://stackoverflow.com/questions/6396101/pure-javascript-send-post-data-without-a-form
+                        if (one_time && noise){
+                            var monElement = document.getElementById('message');
+
+                            // Définir le texte à afficher dans l'élément
+                            monElement.textContent = 'Tu utilise Canva Defender !!!!';
+                            one_time=false;
+                        }
+                        const xhr = new XMLHttpRequest();
+                        xhr.open("POST", "/envoie_fingerprint.php", true);
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+                        xhr.onreadystatechange = function () {
+                            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                                console.log("Request complete! response:", xhr.responseText);
+                            }
+                        };
+                        xhr.send(JSON.stringify(out));
+                    } 
+                }, 1000);
+                
+                
+                
+
+            });
+        });
+
+        o.observe(document.documentElement, {
+            childList:true, subtree:true
+        });
+    </script>
+</body>
+</html>
